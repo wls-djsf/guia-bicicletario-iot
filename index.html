@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CycloSpot Docs — Guia Interativo Arduino + ESP8266 (Bicicletário IoT)</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ========================================================================
+       CABEÇALHO E BUSCA INTELIGENTE DE DÚVIDAS
+       ======================================================================== -->
+  <header class="hero-header">
+    <div class="hero-top-bar">
+      <div class="brand-badge">
+        <div class="brand-icon">🚲</div>
+        <div>
+          <span class="brand-title">CycloSpot Docs</span>
+          <span class="brand-subtitle">GUIA TÉCNICO E ACADÊMICO • ARDUINO + ESP8266</span>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <button class="btn-action" id="btnToggleAcademic" onclick="toggleAllAcademic()">
+          🎓 Expandir Fundamentação Acadêmica
+        </button>
+        <button class="btn-action" id="btnDarkMode" onclick="toggleDarkMode()">
+          🌙 Modo Escuro
+        </button>
+        <button class="btn-action" onclick="window.print()">
+          🖨️ Imprimir / Salvar PDF
+        </button>
+      </div>
+    </div>
+
+    <div class="hero-content">
+      <h1>Guia Passo a Passo: Bicicletário Inteligente IoT</h1>
+      <p>Explicação visual, códigos prontos para copiar, guia de soldagem e fundamentação acadêmica (ABNT) em cada etapa.</p>
+
+      <!-- Campo de Busca Inteligente -->
+      <div class="search-wrapper">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            id="searchInput"
+            class="search-input"
+            placeholder="Qual é a sua dúvida? (Ex: 'quais fios soldar', '5V para 3.3V', 'achar o IP', 'A0 e A1', 'ABNT'...)"
+            oninput="handleSearch(this.value)"
+          >
+          <button class="search-clear" id="btnClearSearch" onclick="clearSearch()" title="Limpar busca">✕</button>
+        </div>
+
+        <div class="quick-Chips">
+          <button class="chip" onclick="quickSearch('qual codigo vai em cada placa')">💻 O que vai em cada placa?</button>
+          <button class="chip" onclick="quickSearch('quais fios soldar')">🔌 Quais fios soldar?</button>
+          <button class="chip" onclick="quickSearch('divisor de tensao 5v 3.3v resistor')">⚡ Resistor 5V para 3.3V</button>
+          <button class="chip" onclick="quickSearch('como descobrir o ip wifi')">🌐 Como descobrir o IP?</button>
+          <button class="chip" onclick="quickSearch('ordem gravar antes de soldar rx')">⚠️ Ordem para não dar erro</button>
+          <button class="chip" onclick="quickSearch('referencias abnt livros')">📚 Livros e ABNT</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       CARD DE RESPOSTA INSTANTÂNEA (APARECE AO DIGITAR UMA DÚVIDA)
+       ======================================================================== -->
+  <div class="instant-answer-container" id="instantAnswerContainer">
+    <div class="instant-answer-card">
+      <div class="instant-header">
+        <span class="instant-badge">💡 Resposta Rápida Encontrada</span>
+        <span id="searchCountBadge" style="font-size: 13px; color: var(--text-muted);"></span>
+      </div>
+      <div class="instant-title" id="instantTitle"></div>
+      <div class="instant-body" id="instantBody"></div>
+      <a href="#secao-1" class="instant-link" id="instantLink">Ir para o passo correspondente ↓</a>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       CONTEÚDO PRINCIPAL + MENU LATERAL
+       ======================================================================== -->
+  <div class="layout-container">
+
+    <!-- BARRA LATERAL (NAVEGAÇÃO + CHECKLIST INTERATIVO) -->
+    <aside class="sidebar">
+      <div class="sidebar-card">
+        <div class="sidebar-title">Etapas do Guia</div>
+        <ul class="nav-list">
+          <li><a href="#secao-1" class="nav-link active"><span class="step-num">1</span> Lógica: Arduino + ESP8266</a></li>
+          <li><a href="#secao-2" class="nav-link"><span class="step-num">2</span> Código do Arduino</a></li>
+          <li><a href="#secao-3" class="nav-link"><span class="step-num">3</span> Código do ESP8266 (Wi-Fi)</a></li>
+          <li><a href="#secao-4" class="nav-link"><span class="step-num">4</span> Guia de Soldagem e Fios</a></li>
+          <li><a href="#secao-5" class="nav-link"><span class="step-num">5</span> Referências ABNT</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-card">
+        <div class="sidebar-title">Seu Progresso na Montagem</div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progressBarFill"></div>
+        </div>
+        <label class="checklist-item">
+          <input type="checkbox" class="step-check" onchange="updateProgress()">
+          <span>1. Atualizar e gravar código no Arduino</span>
+        </label>
+        <label class="checklist-item">
+          <input type="checkbox" class="step-check" onchange="updateProgress()">
+          <span>2. Configurar placa ESP8266 na IDE</span>
+        </label>
+        <label class="checklist-item">
+          <input type="checkbox" class="step-check" onchange="updateProgress()">
+          <span>3. Gravar Wi-Fi no ESP8266 (antes da solda!)</span>
+        </label>
+        <label class="checklist-item">
+          <input type="checkbox" class="step-check" onchange="updateProgress()">
+          <span>4. Anotar o IP no Monitor Serial</span>
+        </label>
+        <label class="checklist-item">
+          <input type="checkbox" class="step-check" onchange="updateProgress()">
+          <span>5. Soldar fios (A1→RX, GND→GND, 3.3V)</span>
+        </label>
+      </div>
+    </aside>
+
+    <!-- ÁREA DE CONTEÚDO -->
+    <main class="content-area" id="docContent">
+
+      <!-- ====================================================================
+           SEÇÃO 1: LÓGICA DO SISTEMA (COMO OS DOIS TRABALHAM JUNTOS)
+           ==================================================================== -->
+      <section class="doc-section" id="secao-1" data-keywords="logica arquitetura arduino esp8266 juntos qual codigo vai em cada placa sensores leds lcd wifi">
+        <div class="section-header">
+          <span class="section-badge">PASSO 1</span>
+          <h2 class="section-title">A Lógica: O que fica no Arduino e o que vai no ESP8266?</h2>
+        </div>
+
+        <p class="lead-text">
+          Você <strong>não perde nada</strong> do que já desenvolveu no Arduino! As duas placas trabalham juntas dividindo as tarefas:
+        </p>
+
+        <div class="grid-2">
+          <div class="info-card">
+            <h3>🤖 1. No Arduino (Controle Físico)</h3>
+            <p>Fica o seu código atual (<code>CODIGOBIKE.ino</code>), pois ele tem as <strong>14 portas necessárias</strong> para:</p>
+            <ul>
+              <li>Ler os <strong>3 sensores ultrassônicos</strong> (pinos 2 a 7);</li>
+              <li>Acender os <strong>6 LEDs</strong> verdes e vermelhos (pinos 8 a 13);</li>
+              <li>Mostrar no <strong>Display LCD I2C</strong> (pinos A4 e A5);</li>
+              <li><strong>Novidade:</strong> Enviar <code>"ocupadas,livres"</code> (ex: <code>1,2</code>) pelo pino <strong>A1</strong> para o ESP8266.</li>
+            </ul>
+          </div>
+
+          <div class="info-card">
+            <h3>📡 2. No ESP8266 (Internet / Wi-Fi)</h3>
+            <p>Vai o código do servidor Web enviado pelo professor:</p>
+            <ul>
+              <li>Conecta no Wi-Fi 2.4 GHz (ou roteador do seu celular);</li>
+              <li>Escuta o pino <strong>RX</strong> esperando o texto <code>1,2</code> vindo do Arduino;</li>
+              <li>Separa os dois números usando a vírgula <code>,</code>;</li>
+              <li>Cria o site <strong>Bicicletário Inteligente</strong> que atualiza a cada 2 segundos.</li>
+            </ul>
+          </div>
+        </div>
+
+        <details class="academic-details">
+          <summary class="academic-summary">
+            <span>🎓 Fundamentação Acadêmica desta Etapa (Clique para abrir/fechar)</span>
+            <span>▼</span>
+          </summary>
+          <div class="academic-content">
+            <p><strong>Arquitetura de Sistemas Embarcados Distribuídos via UART:</strong></p>
+            <ul>
+              <li><strong>Limitação de I/O e Nível Lógico:</strong> Conforme o <em>ESP8266EX Datasheet</em> (ESPRESSIF SYSTEMS, 2023, Seção 1.4), o SoC opera em lógica CMOS de <strong>3,3 V</strong> e possui número restrito de pinos GPIO. Já a maquete exige <strong>14 pinos de I/O</strong> em lógica TTL de <strong>5 V</strong>, atendidos nativamente pelo microcontrolador ATmega328P do Arduino (ALBUQUERQUE; ALEXANDRIA, 2015, p. 45-52).</li>
+              <li><strong>Acoplamento Serial Assíncrono (UART):</strong> Segundo Oliveira (2017, Cap. 3) e Monk (2017, Cap. 11), a integração entre o Arduino e o coprocessador Wi-Fi é feita por comunicação serial assíncrona, transmitindo quadros de texto delimitados por vírgula e finalizados por quebra de linha (<code>\n</code>, ASCII 10).</li>
+            </ul>
+          </div>
+        </details>
+      </section>
+
+      <!-- ====================================================================
+           SEÇÃO 2: O QUE ADICIONAR NO CÓDIGO DO ARDUINO
+           ==================================================================== -->
+      <section class="doc-section" id="secao-2" data-keywords="codigo arduino softwareserial espserial a0 a1 adicionar mudancas vagasocupadas vagaslivres">
+        <div class="section-header">
+          <span class="section-badge">PASSO 2</span>
+          <h2 class="section-title">O que adicionar no Código do Arduino</h2>
+        </div>
+
+        <p class="lead-text">
+          Como os pinos digitais <code>2</code> a <code>13</code> do Arduino já estão ocupados pelos sensores e LEDs, usamos os pinos <strong><code>A0</code> (RX)</strong> e <strong><code>A1</code> (TX)</strong> para conversar com o ESP8266. São apenas <strong>4 linhas adicionadas</strong> ao seu código:
+        </p>
+
+        <div class="step-cards">
+          <div class="step-card">
+            <div class="step-card-num">1</div>
+            <div class="step-card-body">
+              <h4>No topo do código (junto com as bibliotecas):</h4>
+              <p>Adicione <code>#include &lt;SoftwareSerial.h&gt;</code> para criar a porta de comunicação serial extra.</p>
+            </div>
+          </div>
+
+          <div class="step-card">
+            <div class="step-card-num">2</div>
+            <div class="step-card-body">
+              <h4>Logo abaixo do <code>LiquidCrystal_I2C lcd(...)</code>:</h4>
+              <p>Adicione <code>SoftwareSerial espSerial(A0, A1);</code> — isso define o pino <strong>A1</strong> como transmissor (TX) para o ESP8266.</p>
+            </div>
+          </div>
+
+          <div class="step-card">
+            <div class="step-card-num">3</div>
+            <div class="step-card-body">
+              <h4>Dentro do <code>void setup()</code>:</h4>
+              <p>Adicione <code>espSerial.begin(9600);</code> na mesma velocidade (9600) que está no código do professor.</p>
+            </div>
+          </div>
+
+          <div class="step-card">
+            <div class="step-card-num">4</div>
+            <div class="step-card-body">
+              <h4>No final do <code>void loop()</code> (antes do <code>delay(1000)</code>):</h4>
+              <p>Adicione <code>espSerial.print(vagasOcupadas); espSerial.print(","); espSerial.println(vagasLivres);</code> para enviar os dados a cada segundo.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="code-Block-wrapper">
+          <div class="code-header">
+            <span>📄 CODIGO_ARDUINO_BICICLETARIO.ino (Com citações acadêmicas nos comentários)</span>
+            <button class="btn-copy" onclick="copyCode('codeArduino', this)">📋 Copiar Código do Arduino</button>
+          </div>
+<pre id="codeArduino"><code>//Bibliotecas encontradas no livro Automação e Instrumentação Industrial com Arduino Teoria e Projetos(Livro Fisico) 
+//Pag. 201 (ALBUQUERQUE; ALEXANDRIA, 2015)
+#include &lt;Wire.h&gt; //Biblioteca usada pelo LCD I2C
+#include &lt;LiquidCrystal_I2C.h&gt; //Controlar o Display I2C
+
+//Biblioteca SoftwareSerial para comunicação serial assíncrona (UART) com o módulo ESP8266
+//Livro consultado: Programação com Arduino: Começando com Sketches de Simon Monk, 2. ed. Bookman, Cap. 11
+#include &lt;SoftwareSerial.h&gt;
+
+//Inicializa o LCD, 16x2 é o tamanho do display e o 0x27 é o endereço I2C tipo "IP"
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+//Define os pinos A0 (RX) e A1 (TX) como porta serial secundária para enviar dados ao ESP8266.
+//Segundo o livro Automação e Instrumentação Industrial com Arduino (Livro Fisico) Pag. 62,
+//os pinos A0 a A5 (registrador PORTC do ATmega328P) operam nativamente como entradas e saídas digitais.
+SoftwareSerial espSerial(A0, A1);
+
+//Vetores pinos Gatilho e Retorno ou trig e echo das vagas(Sensores)
+//Livro consultado Elementos de programação de Francisco A. C. Pinheiro Pag. 235 e 236(Biblioteca Online)
+const int tVagas[] = {2, 4, 6};
+const int eVagas[] = {3, 5, 7};
+
+//Vetores LEDs
+const int ledsVerdes[] = {8, 10, 12};
+const int ledsVermelhos[] = {9, 11, 13};
+
+//Livro Conceitos de linguagem de programação de Robert W. Sebesta Pag. 201(Biblioteca Online)
+const int limite = 100;
+const int totalVagas = 3;
+
+void setup(){
+  //Inicia comunicação serial com o ESP8266 em 9600 bps (MCROBERTS, 2015, Cap. 16; TANENBAUM, 2021, Cap. 2)
+  espSerial.begin(9600);
+
+  lcd.init();
+  lcd.backlight();
+  lcd.setCursor(0, 0);
+  lcd.print("TESTE LCD OK");
+  lcd.setCursor(0, 1);
+  lcd.print("Funcionando OK");
+  delay(2000);
+  lcd.clear();
+
+  //Livro consultado Automação e Instrumentação Industrial com Arduino (Livro Fisico) Pag. 160 e 175
+  for (int i = 0; i &lt; totalVagas; i++){
+    pinMode(tVagas[i], OUTPUT);
+    pinMode(eVagas[i], INPUT);
+    pinMode(ledsVerdes[i], OUTPUT);
+    pinMode(ledsVermelhos[i], OUTPUT);
+
+    digitalWrite(ledsVerdes[i], LOW);
+    digitalWrite(ledsVermelhos[i], LOW); 
+  }
+}
+
+//Laço de repetição consultado em Elementos de programação de Francisco A. C. Pinheiro Pag. 171
+void loop(){
+  int vagasOcupadas = 0;
+  for(int i = 0; i &lt; totalVagas; i++){
+    int distancia = medirDistancia(tVagas[i], eVagas[i]);
+    if (distancia &gt; 0 &amp;&amp; distancia &lt;= limite){
+      vagasOcupadas++;
+      digitalWrite(ledsVerdes[i], LOW);
+      digitalWrite(ledsVermelhos[i], HIGH);
+    } else {
+      digitalWrite(ledsVerdes[i], HIGH);
+      digitalWrite(ledsVermelhos[i], LOW);
+    }
+  }
+
+  int vagasLivres = totalVagas - vagasOcupadas;
+
+  lcd.setCursor(0, 0);
+  lcd.print("Ocupadas: ");
+  lcd.print(vagasOcupadas);
+  lcd.print(" ");
+
+  lcd.setCursor(0, 1);
+  lcd.print("Livres: ");
+  lcd.print(vagasLivres);
+  lcd.print(" ");
+
+  //Envia os dados via UART para o ESP8266 no formato "ocupadas,livres\n" (OLIVEIRA, 2017, Cap. 3)
+  espSerial.print(vagasOcupadas);
+  espSerial.print(",");
+  espSerial.println(vagasLivres);
+
+  delay(1000);
+}
+
+int medirDistancia(int pinT, int pinE){
+  pinMode(pinT, OUTPUT);
+  digitalWrite(pinT, LOW);
+  delayMicroseconds(2);
+  digitalWrite(pinT, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(pinT, LOW);
+  pinMode(pinE, INPUT);
+
+  //Livro Automação e Instrumentação Industrial com Arduino (Livro fisico) Pag. 157
+  long duracao = pulseIn(pinE, HIGH);
+  //Física Conceitual de Paul G. Hewitt, 13. ed., Cap. 20 (Som)
+  int distancia = duracao * 0.034 / 2;
+  return distancia;
+}</code></pre>
+        </div>
+
+        <details class="academic-details">
+          <summary class="academic-summary">
+            <span>🎓 Fundamentação Acadêmica desta Etapa (Por que usar A0/A1 e 9600 bps?)</span>
+            <span>▼</span>
+          </summary>
+          <div class="academic-content">
+            <ul>
+              <li><strong>Pinos A0 e A1 como Digitais:</strong> No microcontrolador ATmega328P, os pinos analógicos <code>A0</code> a <code>A5</code> pertencem ao registrador bidirecional <code>PORTC</code> e funcionam integralmente como entradas e saídas digitais (ALBUQUERQUE; ALEXANDRIA, 2015, p. 62).</li>
+              <li><strong>Emulação de UART (<code>SoftwareSerial</code>):</strong> O Arduino Uno possui apenas uma UART de hardware (pinos 0 e 1, usada pelo cabo USB). A biblioteca <code>SoftwareSerial</code> cria uma segunda porta serial por temporização de software (MCROBERTS, 2015, Cap. 16; MONK, 2017, Cap. 11).</li>
+              <li><strong>Sincronismo de Baud Rate (9600 bps):</strong> Como a comunicação UART é assíncrona (sem fio de <em>clock</em>), transmissor e receptor devem operar na mesma taxa de 9600 bits por segundo para evitar erros de enquadramento (TANENBAUM; WETHERALL, 2021, Cap. 2).</li>
+            </ul>
+          </div>
+        </details>
+      </section>
+
+      <!-- ====================================================================
+           SEÇÃO 3: COMO CONSTRUIR E GRAVAR O CÓDIGO DO ESP8266
+           ==================================================================== -->
+      <section class="doc-section" id="secao-3" data-keywords="esp8266 wifi servidor web html ip descobrir endereco configurar ide placa url json">
+        <div class="section-header">
+          <span class="section-badge">PASSO 3</span>
+          <h2 class="section-title">Como Configurar e Gravar o Código no ESP8266</h2>
+        </div>
+
+        <p class="lead-text">
+          Para gravar o código do Wi-Fi no ESP8266, primeiro adicione o suporte à placa na Arduino IDE e depois grave o código abaixo (que já inclui a exibição do endereço IP no Monitor Serial).
+        </p>
+
+        <div class="step-cards">
+          <div class="step-card">
+            <div class="step-card-num">1</div>
+            <div class="step-card-body">
+              <h4>Adicionar o pacote ESP8266 na Arduino IDE</h4>
+              <p>Em <strong>Arquivo → Preferências</strong>, cole no campo <em>URLs Adicionais para Gerenciadores de Placas</em>:<br>
+              <code>http://arduino.esp8266.com/stable/package_esp8266com_index.json</code><br>
+              Depois vá em <strong>Ferramentas → Placa → Gerenciador de Placas</strong>, busque por <strong>esp8266</strong> e clique em <strong>Instalar</strong>.</p>
+            </div>
+          </div>
+
+          <div class="step-card">
+            <div class="step-card-num">2</div>
+            <div class="step-card-body">
+              <h4>Colocar o Nome e Senha do Wi-Fi (2.4 GHz)</h4>
+              <p>Nas linhas <code>ssid</code> e <code>password</code> do código abaixo, coloque o Wi-Fi da sua casa ou o <strong>Roteador Wi-Fi (Hotspot) do seu celular</strong> (ótimo para o dia da apresentação na sala de aula!).</p>
+            </div>
+          </div>
+
+          <div class="step-card">
+            <div class="step-card-num">3</div>
+            <div class="step-card-body">
+              <h4>Como descobrir o IP para abrir o site?</h4>
+              <p>Após gravar o código no ESP8266, abra o <strong>Monitor Serial</strong> (em <code>9600 baud</code>). Ele mostrará a mensagem: <code>Acesse no navegador: http://192.168.x.x</code>. Basta digitar esse número no navegador do celular ou PC!</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="code-Block-wrapper">
+          <div class="code-header">
+            <span>📄 CODIGO_ESP8266_WIFI.ino (Com exibição do IP e citações acadêmicas)</span>
+            <button class="btn-copy" onclick="copyCode('codeEsp', this)">📋 Copiar Código do ESP8266</button>
+          </div>
+<pre id="codeEsp"><code>//Bibliotecas oficiais para conectividade Wi-Fi (Padrão IEEE 802.11) e Servidor HTTP no ESP8266
+//Livro consultado: Internet das Coisas com ESP8266, Arduino e Raspberry Pi de Sérgio de Oliveira (Novatec, 2017, Cap. 4 e 5)
+#include &lt;ESP8266WiFi.h&gt;
+#include &lt;ESP8266WebServer.h&gt;
+
+//Credenciais da rede sem fio IEEE 802.11 b/g/n (2,4 GHz)
+//Livro consultado: Redes de Computadores de Andrew S. Tanenbaum e David J. Wetherall (6. ed., Pearson, Cap. 4)
+const char* ssid = "NOME_DO_SEU_WIFI";
+const char* password = "SENHA_DO_SEU_WIFI";
+
+//Instancia o servidor Web na porta TCP 80 (porta padrão do protocolo HTTP na Camada de Aplicação)
+//Livro consultado: Redes de Computadores e a Internet de James F. Kurose e Keith W. Ross (8. ed., Bookman, Cap. 2)
+ESP8266WebServer server(80);
+
+//Variáveis do tipo cadeia de caracteres (String) para armazenar o estado das vagas (SEBESTA, 2018, p. 201-205)
+String ocupadas = "0";
+String livres = "3";
+
+void handleRoot() {
+  String html = "&lt;html&gt;&lt;head&gt;&lt;meta charset='UTF-8'&gt;&lt;meta http-equiv='refresh' content='2'&gt;&lt;/head&gt;";
+  html += "&lt;body style='font-family: Arial; text-align: center; margin-top: 50px;'&gt;";
+  html += "&lt;h1&gt;Bicicletário Inteligente&lt;/h1&gt;";
+  html += "&lt;h2 style='color: red;'&gt;Vagas Ocupadas: " + ocupadas + "&lt;/h2&gt;";
+  html += "&lt;h2 style='color: green;'&gt;Vagas Livres: " + livres + "&lt;/h2&gt;";
+  html += "&lt;/body&gt;&lt;/html&gt;";
+
+  //Retorna código HTTP 200 (OK) e conteúdo MIME text/html (KUROSE; ROSS, 2021, Cap. 2)
+  server.send(200, "text/html", html);
+}
+
+void setup() {
+  //Inicia UART0 do ESP8266 em 9600 bps (ESP8266EX Datasheet, Espressif Systems, 2023, Seção 4.5)
+  Serial.begin(9600);
+  WiFi.begin(ssid, password);
+
+  Serial.print("Conectando ao Wi-Fi");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  //Exibe no Monitor Serial o endereço IPv4 atribuído via protocolo DHCP pelo roteador
+  Serial.println("");
+  Serial.println("Conectado com sucesso!");
+  Serial.print("Acesse no navegador: http://");
+  Serial.println(WiFi.localIP());
+
+  server.on("/", handleRoot);
+  server.begin();
+}
+
+void loop() {
+  server.handleClient();
+
+  //Lê os dados vindos do Arduino ("ocupadas,livres\n") e separa os valores na vírgula (SEBESTA, 2018, p. 205)
+  if (Serial.available() &gt; 0) {
+    String dados = Serial.readStringUntil('\n');
+    dados.trim();
+    int virgula = dados.indexOf(',');
+    if (virgula &gt; 0) {
+      ocupadas = dados.substring(0, virgula);
+      livres = dados.substring(virgula + 1);
+    }
+  }
+}</code></pre>
+        </div>
+
+        <details class="academic-details">
+          <summary class="academic-summary">
+            <span>🎓 Fundamentação Acadêmica desta Etapa (Wi-Fi IEEE 802.11, HTTP e Substrings)</span>
+            <span>▼</span>
+          </summary>
+          <div class="academic-content">
+            <ul>
+              <li><strong>Camada de Enlace IEEE 802.11 e DHCP:</strong> A função <code>WiFi.begin()</code> realiza a associação ao Ponto de Acesso em 2,4 GHz e obtém endereço IP dinâmico via protocolo DHCP (TANENBAUM; WETHERALL, 2021, Cap. 4 e 5).</li>
+              <li><strong>Protocolo HTTP na Porta 80:</strong> Conforme Kurose e Ross (2021, Cap. 2), o servidor HTTP escuta conexões TCP na porta 80 e responde às requisições GET na rota <code>"/"</code> com o código de sucesso <code>200 OK</code> e a página HTML com <code>meta refresh</code> de 2 segundos (OLIVEIRA, 2017, Cap. 5).</li>
+              <li><strong>Análise Léxica de Subcadeias (<em>Substring Slicing</em>):</strong> Os métodos <code>indexOf(',')</code> e <code>substring()</code> particionam a cadeia de caracteres recebida em duas variáveis independentes (SEBESTA, 2018, p. 205).</li>
+            </ul>
+          </div>
+        </details>
+      </section>
+
+      <!-- ====================================================================
+           SEÇÃO 4: GUIA DE SOLDAGEM E LIGAÇÕES FÍSICAS
+           ==================================================================== -->
+      <section class="doc-section" id="secao-4" data-keywords="solda soldar fios pinos rx tx a1 gnd 5v 3.3v divisor de tensao resistor 1k 2k queimar protoboard ordem gravar">
+        <div class="section-header">
+          <span class="section-badge">PASSO 4</span>
+          <h2 class="section-title">Ordem de Gravação e Guia de Soldagem dos Fios</h2>
+        </div>
+
+        <div class="alert-box alert-danger">
+          <strong>⚠️ REGRA DE OURO (IMPORTANTE ANTES DE SOLDAR!):</strong><br>
+          Grave o código no ESP8266 e anote o IP <strong>ANTES</strong> de soldar o fio que vem do pino <code>A1</code> do Arduino no pino <code>RX</code> do ESP8266! O pino <code>RX</code> também é usado pelo USB na hora de gravar o ESP8266; se o Arduino já estiver soldado enviando sinais nele, a gravação dará erro.
+        </div>
+
+        <p class="lead-text">
+          Você <strong>não precisa soldar todos os pinos</strong> do módulo ESP8266! Solde apenas os fios abaixo:
+        </p>
+
+        <table class="pinout-table">
+          <thead>
+            <tr>
+              <th>De onde sai (Arduino)</th>
+              <th>Onde soldar (ESP8266)</th>
+              <th>Função e Cuidado Prático</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="pin-badge pin-arduino">Pino A1</span> (TX do espSerial)</td>
+              <td><span class="pin-badge pin-esp">Pino RX</span></td>
+              <td>Envia os dados das vagas do Arduino para o ESP8266.<br><strong>Dica de proteção:</strong> Coloque um resistor de <strong>1 kΩ</strong> no caminho desse fio e um de <strong>2 kΩ</strong> entre o <code>RX</code> e o <code>GND</code> para baixar de 5V para 3,3V.</td>
+            </tr>
+            <tr>
+              <td><span class="pin-badge pin-gnd">GND</span></td>
+              <td><span class="pin-badge pin-gnd">GND</span></td>
+              <td><strong>Obrigatório:</strong> Une o terra das duas placas. Sem o GND interligado, os dados não passam de uma placa para a outra!</td>
+            </tr>
+            <tr>
+              <td><span class="pin-badge pin-arduino">3.3V</span> (ou 5V no VIN se for NodeMCU)</td>
+              <td><span class="pin-badge pin-esp">VCC / 3V3</span> (+ pino <code>EN/CH_PD</code>)</td>
+              <td>Se o seu ESP8266 for o módulo pequeno sem USB (ESP-01 ou ESP-12), ligue <code>VCC</code> e <code>CH_PD/EN</code> <strong>somente em 3.3V</strong> (nunca em 5V!).</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="alert-box alert-warning">
+          <strong>🔧 Dica Prática para Soldar no Módulo Pequeno:</strong>
+          Desencape apenas <code>2 mm</code> da ponta do fio, coloque uma gotinha mínima de solda no fio e no contato do ESP8266 antes (estanhagem), e depois encoste um no outro com um toque rápido de 1 segundo do ferro de solda. No final, pingue <strong>cola quente</strong> na base dos fios para não quebrarem quando mexer na maquete!
+        </div>
+
+        <details class="academic-details">
+          <summary class="academic-summary">
+            <span>🎓 Fundamentação Acadêmica desta Etapa (Lei do Divisor de Tensão e Soldagem)</span>
+            <span>▼</span>
+          </summary>
+          <div class="academic-content">
+            <ul>
+              <li><strong>Cálculo do Divisor de Tensão Resistivo (BOYLESTAD, 2019, Cap. 5, p. 142):</strong><br>
+                O Arduino emite nível lógico alto de $5\text{ V}$, enquanto o ESP8266 opera em $3,3\text{ V}$ (ESPRESSIF SYSTEMS, 2023, Seção 5.1). Pela equação do divisor de tensão em circuitos em série:<br>
+                <code>V_RX = V_in × [ R2 / (R1 + R2) ] = 5 V × [ 2000 Ω / (1000 Ω + 2000 Ω) ] = 3,33 V</code>
+              </li>
+              <li><strong>Equipontencialização de Referência (GND Comum):</strong> Segundo Boylestad (2019, Cap. 2), toda tensão elétrica é medida em relação a um nó de referência comum ($0\text{ V}$), tornando indispensável a união dos terminais <code>GND</code>.</li>
+              <li><strong>Técnica de Estanhagem Prévia (BRAGA, 2018):</strong> A aplicação prévia de liga estanho-chumbo reduz o tempo de transferência térmica para menos de $1,5\text{ s}$, prevenindo delaminação dos pads metálicos SMD.</li>
+            </ul>
+          </div>
+        </details>
+      </section>
+
+      <!-- ====================================================================
+           SEÇÃO 5: REFERÊNCIAS BIBLIOGRÁFICAS (PADRÃO ABNT NBR 6023)
+           ==================================================================== -->
+      <section class="doc-section" id="secao-5" data-keywords="referencias bibliograficas abnt livros autores albuquerque pinheiro sebesta hewitt boylestad tanenbaum kurose monk mcroberts oliveira">
+        <div class="section-header">
+          <span class="section-badge">PASSO 5</span>
+          <h2 class="section-title">Referências Bibliográficas (Padrão ABNT NBR 6023)</h2>
+        </div>
+
+        <p class="lead-text">
+          Todas as referências abaixo fundamentam o código e o memorial técnico do projeto e podem ser incluídas diretamente no relatório ou slides da apresentação:
+        </p>
+
+        <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 10px; font-size: 14.5px;">
+          <li>ALBUQUERQUE, Pedro Urbano Braga de; ALEXANDRIA, Auzuir Ripardo de. <strong>Automação e Instrumentação Industrial com Arduino: Teoria e Projetos</strong>. São Paulo: Érica / Saraiva, 2015.</li>
+          <li>ARDUINO. <strong>SoftwareSerial Library - Arduino Language Reference</strong>. 2024. Disponível em: <a href="https://docs.arduino.cc/learn/built-in-libraries/software-serial/" target="_blank">https://docs.arduino.cc/learn/built-in-libraries/software-serial/</a>.</li>
+          <li>ARDUINO. <strong>pulseIn() - Referência da Linguagem Arduino</strong>. 2024. Disponível em: <a href="https://docs.arduino.cc/language-reference/pt/fun%C3%A7%C3%B5es/advanced-io/pulseIn/" target="_blank">https://docs.arduino.cc/language-reference/pt/fun%C3%A7%C3%B5es/advanced-io/pulseIn/</a>.</li>
+          <li>BOYLESTAD, Robert L. <strong>Introdução à Análise de Circuitos</strong>. 13. ed. São Paulo: Pearson Education do Brasil, 2019.</li>
+          <li>BRAGA, Newton C. <strong>Como Fazer Soldagens Perfeitas: Guia Prático de Montagem Eletrônica</strong>. São Paulo: Instituto NCB, 2018.</li>
+          <li>ESPRESSIF SYSTEMS. <strong>ESP8266EX Datasheet</strong>. Version 6.9. Shanghai: Espressif Systems, 2023.</li>
+          <li>HEWITT, Paul G. <strong>Física Conceitual</strong>. 13. ed. Porto Alegre: Bookman, 2023.</li>
+          <li>KUROSE, James F.; ROSS, Keith W. <strong>Redes de Computadores e a Internet: Uma Abordagem Top-Down</strong>. 8. ed. Porto Alegre: Bookman, 2021.</li>
+          <li>MCROBERTS, Michael. <strong>Arduino Básico</strong>. 2. ed. São Paulo: Novatec, 2015.</li>
+          <li>MONK, Simon. <strong>Programação com Arduino: Começando com Sketches</strong>. 2. ed. Porto Alegre: Bookman, 2017.</li>
+          <li>OLIVEIRA, Sérgio de. <strong>Internet das Coisas com ESP8266, Arduino e Raspberry Pi</strong>. São Paulo: Novatec, 2017.</li>
+          <li>PINHEIRO, Francisco A. C. <strong>Elementos de Programação em C</strong>. Porto Alegre: Bookman, 2012.</li>
+          <li>SEBESTA, Robert W. <strong>Conceitos de Linguagens de Programação</strong>. 11. ed. Porto Alegre: Bookman, 2018.</li>
+          <li>TANENBAUM, Andrew S.; WETHERALL, David J. <strong>Redes de Computadores</strong>. 6. ed. São Paulo: Pearson, 2021.</li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
